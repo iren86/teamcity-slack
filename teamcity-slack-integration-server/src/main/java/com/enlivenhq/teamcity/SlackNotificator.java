@@ -14,6 +14,10 @@ import jetbrains.buildServer.users.NotificatorPropertyKey;
 import jetbrains.buildServer.users.PropertyKey;
 import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.vcs.VcsRoot;
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.builder.RecursiveToStringStyle;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,6 +30,7 @@ import java.util.Set;
 public class SlackNotificator implements Notificator {
 
     private static final Logger log = Logger.getLogger(SlackNotificator.class);
+    private static final ToStringStyle CUSTOM_TO_STRING_STYLE = new CustomToStringStyle();
 
     private static final String type = "SlackNotificator";
 
@@ -54,79 +59,85 @@ public class SlackNotificator implements Notificator {
         return "Slack Notifier";
     }
 
-    public void notifyBuildFailed(@NotNull SRunningBuild sRunningBuild, @NotNull Set<SUser> users) {
-         sendNotification(sRunningBuild.getFullName(), sRunningBuild.getBuildNumber(), "failed: " + sRunningBuild.getStatusDescriptor().getText(), "danger", users, sRunningBuild);
+    public void notifyLabelingFailed(@NotNull Build build, @NotNull VcsRoot vcsRoot, @NotNull Throwable throwable, @NotNull Set<SUser> users) {
+        sendNotification(build.getFullName(), build.getBuildNumber(), "labeling failed", "danger", users, build);
     }
 
-    public void notifyBuildFailedToStart(@NotNull SRunningBuild sRunningBuild, @NotNull Set<SUser> users) {
-        sendNotification(sRunningBuild.getFullName(), sRunningBuild.getBuildNumber(), "failed to start", "danger", users, sRunningBuild);
+    public void notifyBuildFailed(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users) {
+        log(runningBuild, users, "[notifyBuildFailed]");
+        sendNotification(runningBuild.getFullName(), runningBuild.getBuildNumber(), "failed: " + runningBuild.getStatusDescriptor().getText(), "danger", users, runningBuild);
     }
 
-    public void notifyBuildSuccessful(@NotNull SRunningBuild sRunningBuild, @NotNull Set<SUser> users) {
-        sendNotification(sRunningBuild.getFullName(), sRunningBuild.getBuildNumber(), "built successfully", "good", users, sRunningBuild);
+    public void notifyBuildFailedToStart(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users) {
+        log(runningBuild, users, "[notifyBuildFailedToStart]");
+        sendNotification(runningBuild.getFullName(), runningBuild.getBuildNumber(), "failed to start", "danger", users, runningBuild);
     }
 
-    public void notifyLabelingFailed(@NotNull Build build, @NotNull VcsRoot vcsRoot, @NotNull Throwable throwable, @NotNull Set<SUser> sUsers) {
-        sendNotification(build.getFullName(), build.getBuildNumber(), "labeling failed", "danger", sUsers, build);
+    public void notifyBuildSuccessful(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users) {
+        log(runningBuild, users, "[notifyBuildSuccessful]");
+        sendNotification(runningBuild.getFullName(), runningBuild.getBuildNumber(), "built successfully", "good", users, runningBuild);
     }
 
-    public void notifyBuildFailing(@NotNull SRunningBuild sRunningBuild, @NotNull Set<SUser> sUsers) {
-        sendNotification(sRunningBuild.getFullName(), sRunningBuild.getBuildNumber(), "failing", "danger", sUsers, sRunningBuild);
+    public void notifyBuildFailing(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users) {
+        log(runningBuild, users, "[notifyBuildFailing]");
+        sendNotification(runningBuild.getFullName(), runningBuild.getBuildNumber(), "failing", "danger", users, runningBuild);
     }
 
-    public void notifyBuildProbablyHanging(@NotNull SRunningBuild sRunningBuild, @NotNull Set<SUser> sUsers) {
-        sendNotification(sRunningBuild.getFullName(), sRunningBuild.getBuildNumber(), "probably hanging", "warning", sUsers, sRunningBuild);
+    public void notifyBuildProbablyHanging(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users) {
+        log(runningBuild, users, "[notifyBuildProbablyHanging]");
+        sendNotification(runningBuild.getFullName(), runningBuild.getBuildNumber(), "probably hanging", "warning", users, runningBuild);
     }
 
-    public void notifyBuildStarted(@NotNull SRunningBuild sRunningBuild, @NotNull Set<SUser> sUsers) {
-        sendNotification(sRunningBuild.getFullName(), sRunningBuild.getBuildNumber(), "started", "warning", sUsers, sRunningBuild);
+    public void notifyBuildStarted(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users) {
+        log(runningBuild, users, "[notifyBuildStarted]");
+        sendNotification(runningBuild.getFullName(), runningBuild.getBuildNumber(), "started", "warning", users, runningBuild);
     }
 
-    public void notifyResponsibleChanged(@NotNull SBuildType sBuildType, @NotNull Set<SUser> sUsers) {
-
-    }
-
-    public void notifyResponsibleAssigned(@NotNull SBuildType sBuildType, @NotNull Set<SUser> sUsers) {
-
-    }
-
-    public void notifyResponsibleChanged(@Nullable TestNameResponsibilityEntry testNameResponsibilityEntry, @NotNull TestNameResponsibilityEntry testNameResponsibilityEntry2, @NotNull SProject sProject, @NotNull Set<SUser> sUsers) {
-
-    }
-
-    public void notifyResponsibleAssigned(@Nullable TestNameResponsibilityEntry testNameResponsibilityEntry, @NotNull TestNameResponsibilityEntry testNameResponsibilityEntry2, @NotNull SProject sProject, @NotNull Set<SUser> sUsers) {
+    public void notifyResponsibleChanged(@NotNull SBuildType sBuildType, @NotNull Set<SUser> users) {
 
     }
 
-    public void notifyResponsibleChanged(@NotNull Collection<TestName> testNames, @NotNull ResponsibilityEntry responsibilityEntry, @NotNull SProject sProject, @NotNull Set<SUser> sUsers) {
+    public void notifyResponsibleAssigned(@NotNull SBuildType sBuildType, @NotNull Set<SUser> users) {
 
     }
 
-    public void notifyResponsibleAssigned(@NotNull Collection<TestName> testNames, @NotNull ResponsibilityEntry responsibilityEntry, @NotNull SProject sProject, @NotNull Set<SUser> sUsers) {
+    public void notifyResponsibleChanged(@Nullable TestNameResponsibilityEntry testNameResponsibilityEntry, @NotNull TestNameResponsibilityEntry testNameResponsibilityEntry2, @NotNull SProject sProject, @NotNull Set<SUser> users) {
 
     }
 
-    public void notifyBuildProblemResponsibleAssigned(@NotNull Collection<BuildProblemInfo> buildProblemInfos, @NotNull ResponsibilityEntry responsibilityEntry, @NotNull SProject sProject, @NotNull Set<SUser> sUsers) {
+    public void notifyResponsibleAssigned(@Nullable TestNameResponsibilityEntry testNameResponsibilityEntry, @NotNull TestNameResponsibilityEntry testNameResponsibilityEntry2, @NotNull SProject sProject, @NotNull Set<SUser> users) {
 
     }
 
-    public void notifyBuildProblemResponsibleChanged(@NotNull Collection<BuildProblemInfo> buildProblemInfos, @NotNull ResponsibilityEntry responsibilityEntry, @NotNull SProject sProject, @NotNull Set<SUser> sUsers) {
+    public void notifyResponsibleChanged(@NotNull Collection<TestName> testNames, @NotNull ResponsibilityEntry responsibilityEntry, @NotNull SProject sProject, @NotNull Set<SUser> users) {
 
     }
 
-    public void notifyTestsMuted(@NotNull Collection<STest> sTests, @NotNull MuteInfo muteInfo, @NotNull Set<SUser> sUsers) {
+    public void notifyResponsibleAssigned(@NotNull Collection<TestName> testNames, @NotNull ResponsibilityEntry responsibilityEntry, @NotNull SProject sProject, @NotNull Set<SUser> users) {
 
     }
 
-    public void notifyTestsUnmuted(@NotNull Collection<STest> sTests, @NotNull MuteInfo muteInfo, @Nullable SUser sUser, @NotNull Set<SUser> sUsers) {
+    public void notifyBuildProblemResponsibleAssigned(@NotNull Collection<BuildProblemInfo> buildProblemInfos, @NotNull ResponsibilityEntry responsibilityEntry, @NotNull SProject sProject, @NotNull Set<SUser> users) {
 
     }
 
-    public void notifyBuildProblemsMuted(@NotNull Collection<BuildProblemInfo> buildProblemInfos, @NotNull MuteInfo muteInfo, @NotNull Set<SUser> sUsers) {
+    public void notifyBuildProblemResponsibleChanged(@NotNull Collection<BuildProblemInfo> buildProblemInfos, @NotNull ResponsibilityEntry responsibilityEntry, @NotNull SProject sProject, @NotNull Set<SUser> users) {
 
     }
 
-    public void notifyBuildProblemsUnmuted(@NotNull Collection<BuildProblemInfo> buildProblemInfos, @NotNull MuteInfo muteInfo, @Nullable SUser sUser, @NotNull Set<SUser> sUsers) {
+    public void notifyTestsMuted(@NotNull Collection<STest> sTests, @NotNull MuteInfo muteInfo, @NotNull Set<SUser> users) {
+
+    }
+
+    public void notifyTestsUnmuted(@NotNull Collection<STest> sTests, @NotNull MuteInfo muteInfo, @Nullable SUser sUser, @NotNull Set<SUser> users) {
+
+    }
+
+    public void notifyBuildProblemsMuted(@NotNull Collection<BuildProblemInfo> buildProblemInfos, @NotNull MuteInfo muteInfo, @NotNull Set<SUser> users) {
+
+    }
+
+    public void notifyBuildProblemsUnmuted(@NotNull Collection<BuildProblemInfo> buildProblemInfos, @NotNull MuteInfo muteInfo, @Nullable SUser sUser, @NotNull Set<SUser> users) {
 
     }
 
@@ -149,9 +160,8 @@ public class SlackNotificator implements Notificator {
         for (SUser user : users) {
             SlackWrapper slackWrapper = getSlackWrapperWithUser(user);
             try {
-                slackWrapper.send(project, build, getBranch((SBuild)bt), statusText, statusColor, bt);
-            }
-            catch (IOException e) {
+                slackWrapper.send(project, build, getBranch((SBuild) bt), statusText, statusColor, bt);
+            } catch (IOException e) {
                 log.error(e.getMessage());
             }
         }
@@ -164,7 +174,7 @@ public class SlackNotificator implements Notificator {
 
         if (slackConfigurationIsInvalid(channel, username, url)) {
             log.error("Could not send Slack notification. The Slack channel, username, or URL was null. " +
-                      "Double check your Notification settings");
+                    "Double check your Notification settings");
 
             return new SlackWrapper();
         }
@@ -189,10 +199,32 @@ public class SlackNotificator implements Notificator {
 
     private String getBranch(SBuild build) {
         Branch branch = build.getBranch();
-        if (branch != null && branch.getName() != "<default>") {
+        if (branch != null && !branch.getName().equals("<default>")) {
             return branch.getDisplayName();
         } else {
             return "";
+        }
+    }
+
+    private void log(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users, String label) {
+        log.error(anyToString(runningBuild, label + " build"));
+        log.error(anyToString(users, label + " users"));
+    }
+
+    private String anyToString(Object o, String message) {
+        return String.format("%s:\n%s", message, anyToString(o));
+    }
+
+    private String anyToString(Object o) {
+        return new ReflectionToStringBuilder(o, CUSTOM_TO_STRING_STYLE).toString();
+    }
+
+    private static class CustomToStringStyle extends RecursiveToStringStyle {
+        public CustomToStringStyle() {
+            this.setContentStart("[");
+            this.setFieldSeparator(SystemUtils.LINE_SEPARATOR + "  ");
+            this.setFieldSeparatorAtStart(true);
+            this.setContentEnd(SystemUtils.LINE_SEPARATOR + "]");
         }
     }
 }

@@ -11,25 +11,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: jdom:jdom:1.0" level="project" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../junit-4.7.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$APPLICATION_HOME_DIR$/plugins/testng/lib/testng.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.4" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.jetbrains.teamcity:server-api:8.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: javax.servlet:jstl:1.1.2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.tomcat:el-api:6.0.16" level="project" />

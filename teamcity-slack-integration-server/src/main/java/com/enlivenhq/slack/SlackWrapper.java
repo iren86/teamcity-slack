@@ -14,8 +14,7 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.net.URL;
 
-public class SlackWrapper
-{
+public class SlackWrapper {
     public static final GsonBuilder GSON_BUILDER = new GsonBuilder().excludeFieldsWithoutExposeAnnotation();
     private static final Logger LOG = Logger.getLogger(SlackNotificator.class);
     protected String slackUrl;
@@ -28,16 +27,15 @@ public class SlackWrapper
 
     protected Boolean useAttachment;
 
-    public SlackWrapper () {
-        this.useAttachment  = TeamCityProperties.getBooleanOrTrue("teamcity.notification.slack.useAttachment");
+    public SlackWrapper() {
+        this.useAttachment = TeamCityProperties.getBooleanOrTrue("teamcity.notification.slack.useAttachment");
     }
 
-    public SlackWrapper (Boolean useAttachment) {
+    public SlackWrapper(Boolean useAttachment) {
         this.useAttachment = useAttachment;
     }
 
-    public String send(String project, String build, String branch, String statusText, String statusColor, Build bt) throws IOException
-    {
+    public String send(String project, String build, String branch, String statusText, String statusColor, Build bt) throws IOException {
         String formattedPayload = getFormattedPayload(project, build, branch, statusText, statusColor, bt.getBuildTypeExternalId(), bt.getBuildId());
         LOG.debug(formattedPayload);
 
@@ -50,7 +48,7 @@ public class SlackWrapper
         httpsURLConnection.setDoOutput(true);
 
         DataOutputStream dataOutputStream = new DataOutputStream(
-            httpsURLConnection.getOutputStream()
+                httpsURLConnection.getOutputStream()
         );
 
         dataOutputStream.writeBytes(formattedPayload);
@@ -62,8 +60,7 @@ public class SlackWrapper
 
         try {
             inputStream = httpsURLConnection.getInputStream();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             responseBody = e.getMessage();
             inputStream = httpsURLConnection.getErrorStream();
             if (inputStream != null) {
@@ -103,33 +100,27 @@ public class SlackWrapper
         return responseBody;
     }
 
-    public void setSlackUrl(String slackUrl)
-    {
+    public void setSlackUrl(String slackUrl) {
         this.slackUrl = slackUrl;
     }
 
-    public String getSlackUrl()
-    {
+    public String getSlackUrl() {
         return this.slackUrl;
     }
 
-    public void setUsername(String username)
-    {
+    public void setUsername(String username) {
         this.username = username;
     }
 
-    public String getUsername()
-    {
+    public String getUsername() {
         return this.username;
     }
 
-    public void setChannel(String channel)
-    {
+    public void setChannel(String channel) {
         this.channel = channel;
     }
 
-    public String getChannel()
-    {
+    public String getChannel() {
         return this.channel;
     }
 

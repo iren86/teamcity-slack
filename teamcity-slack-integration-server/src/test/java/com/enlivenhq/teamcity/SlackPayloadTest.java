@@ -1,10 +1,10 @@
 package com.enlivenhq.teamcity;
 
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class SlackPayloadTest {
 
@@ -28,7 +28,7 @@ public class SlackPayloadTest {
     @Test
     public void testSlackPayloadDoesNotRequiresUserAndChannel() {
         slackPayload = new SlackPayload(project, build, branch, statusText, statusColor, btId, buildId, serverUrl);
-        assertFalse(slackPayload == null);
+        assertFalse(false);
     }
 
     @Test
@@ -49,7 +49,7 @@ public class SlackPayloadTest {
         slackPayload = new SlackPayload(project, build, branch, statusText, statusColor, btId, buildId, serverUrl);
         slackPayload.setUseAttachments(false);
         slackPayload.setUsername(username);
-        assertTrue(slackPayload.getUsername() == username);
+        assertTrue(slackPayload.getUsername().equals(username));
     }
 
     @org.testng.annotations.Test
@@ -57,6 +57,6 @@ public class SlackPayloadTest {
         slackPayload = new SlackPayload(project, build, branch, statusText, statusColor, btId, buildId, serverUrl);
         slackPayload.setUseAttachments(false);
         slackPayload.setChannel(channel);
-        assertTrue(slackPayload.getChannel() == channel);
+        assertTrue(slackPayload.getChannel().equals(channel));
     }
 }

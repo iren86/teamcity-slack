@@ -1,4 +1,5 @@
 package com.enlivenhq.teamcity;
+
 import com.google.gson.annotations.Expose;
 
 import java.util.ArrayList;
@@ -27,11 +28,12 @@ public class SlackPayload {
     }
 
     private class AttachmentField {
-        public AttachmentField (String name, String val, boolean isShort) {
+        public AttachmentField(String name, String val, boolean isShort) {
             title = name;
             value = val;
             this.isShort = isShort;
         }
+
         @Expose
         protected String title;
         @Expose
@@ -58,7 +60,7 @@ public class SlackPayload {
         this.username = username;
     }
 
-    public void setUseAttachments (boolean useAttachments) {
+    public void setUseAttachments(boolean useAttachments) {
         this.useAttachments = useAttachments;
         if (!useAttachments) {
             _attachments = attachments;
@@ -68,7 +70,7 @@ public class SlackPayload {
         }
     }
 
-    public boolean hasAttachments () {
+    public boolean hasAttachments() {
         return attachments != null && attachments.size() > 0;
     }
 
