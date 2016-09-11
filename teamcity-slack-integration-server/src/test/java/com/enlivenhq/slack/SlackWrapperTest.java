@@ -18,5 +18,4 @@ public class SlackWrapperTest {
         SlackWrapper slack = new SlackWrapper(false);
         assertFalse(slack.useAttachment);
     }
-
 }

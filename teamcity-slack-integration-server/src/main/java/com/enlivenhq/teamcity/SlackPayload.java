@@ -1,9 +1,12 @@
 package com.enlivenhq.teamcity;
 
+import com.enlivenhq.slack.BuildInfo;
+import com.enlivenhq.slack.Changeset;
 import com.google.gson.annotations.Expose;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class SlackPayload {
     @Expose
@@ -74,39 +77,42 @@ public class SlackPayload {
         return attachments != null && attachments.size() > 0;
     }
 
-    public SlackPayload(String project, String build, String branch, String statusText, String statusColor, String btId, long buildId, String serverUrl) {
-        String escapedBranch = branch.length() > 0 ? " [" + branch + "]" : "";
-        statusText = "<" + serverUrl + "/viewLog.html?buildId=" + buildId + "&buildTypeId=" + btId + "|" + statusText + ">";
+    public SlackPayload(BuildInfo info) {
+        Objects.requireNonNull(info);
 
-        String statusEmoji = statusColor.equals("danger") ? ":x: " : statusColor.equals("warning") ? "" : ":white_check_mark: ";
+        String statusText = "<" + info.getServerUrl() + "/viewLog.html?buildId=" + info.getBuildId() + "&buildTypeId=" + info.getBtId() + "|" + info.getStatusText() + ">";
+        String statusEmoji = info.getStatusColor().equals("danger") ? ":x: " : info.getStatusColor().equals("warning") ? "" : ":white_check_mark: ";
+        String payloadText = statusEmoji + info.getProject() + " #" + info.getBuild();
 
-        String payloadText = statusEmoji + project + escapedBranch + " #" + build + " " + statusText;
         this.text = payloadText;
 
         Attachment attachment = new Attachment();
-        attachment.color = statusColor;
-        attachment.pretext = "Build Status";
+        attachment.color = info.getStatusColor();
+        attachment.pretext = "Build Info";
         attachment.fallback = payloadText;
-        attachment.fields = new ArrayList<AttachmentField>();
+        attachment.fields = new ArrayList<>();
 
-        AttachmentField attachmentProject = new AttachmentField("Project", project, false);
-        AttachmentField attachmentBuild = new AttachmentField("Build", build, true);
         AttachmentField attachmentStatus = new AttachmentField("Status", statusText, false);
-        AttachmentField attachmentBranch;
+        AttachmentField attachmentBranch = new AttachmentField("Branch", info.getBranch(), true);
 
-        attachment.fields.add(attachmentProject);
-        attachment.fields.add(attachmentBuild);
-        if (branch.length() > 0) {
-            attachmentBranch = new AttachmentField("Branch", branch, false);
-            attachment.fields.add(attachmentBranch);
-        }
         attachment.fields.add(attachmentStatus);
+        attachment.fields.add(attachmentBranch);
 
-        this._attachments = new ArrayList<Attachment>();
+        StringBuilder sb = new StringBuilder();
+        for (Changeset changeset : info.getChangesetList()) {
+            sb.append("Commit: ").append(changeset.getCommit()).append("\n");
+            sb.append("Author: ").append(changeset.getAuthor()).append("\n");
+            sb.append("Summary: ").append(changeset.getSummary()).append("\n");
+            sb.append("\n");
+        }
+        AttachmentField attachmentChangesets = new AttachmentField("Changesets", sb.toString(), false);
+        attachment.fields.add(attachmentChangesets);
+
+        this._attachments = new ArrayList<>();
         this._attachments.add(0, attachment);
 
         if (this.useAttachments) {
-            attachments = _attachments;
+            this.attachments = this._attachments;
         }
     }
 }

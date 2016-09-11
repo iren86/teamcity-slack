@@ -1,5 +1,7 @@
 package com.enlivenhq.teamcity;
 
+import com.enlivenhq.slack.BuildInfo;
+import com.enlivenhq.slack.Changeset;
 import com.enlivenhq.slack.SlackWrapper;
 import jetbrains.buildServer.Build;
 import jetbrains.buildServer.notification.Notificator;
@@ -13,11 +15,9 @@ import jetbrains.buildServer.tests.TestName;
 import jetbrains.buildServer.users.NotificatorPropertyKey;
 import jetbrains.buildServer.users.PropertyKey;
 import jetbrains.buildServer.users.SUser;
+import jetbrains.buildServer.vcs.SVcsModification;
 import jetbrains.buildServer.vcs.VcsRoot;
-import org.apache.commons.lang3.SystemUtils;
-import org.apache.commons.lang3.builder.RecursiveToStringStyle;
-import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
+import jetbrains.buildServer.web.util.WebUtil;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,12 +25,12 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public class SlackNotificator implements Notificator {
 
     private static final Logger log = Logger.getLogger(SlackNotificator.class);
-    private static final ToStringStyle CUSTOM_TO_STRING_STYLE = new CustomToStringStyle();
 
     private static final String type = "SlackNotificator";
 
@@ -59,38 +59,31 @@ public class SlackNotificator implements Notificator {
         return "Slack Notifier";
     }
 
+    public void notifyBuildFailed(@NotNull SRunningBuild build, @NotNull Set<SUser> users) {
+        sendNotification(extractInfo(build, "failed: " + build.getStatusDescriptor().getText(), "danger"), users);
+    }
+
+    public void notifyBuildFailedToStart(@NotNull SRunningBuild build, @NotNull Set<SUser> users) {
+        sendNotification(extractInfo(build, "failed to start: " + build.getStatusDescriptor().getText(), "danger"), users);
+    }
+
+    public void notifyBuildSuccessful(@NotNull SRunningBuild build, @NotNull Set<SUser> users) {
+        sendNotification(extractInfo(build, "built successfully", "good"), users);
+    }
+
+    public void notifyBuildFailing(@NotNull SRunningBuild build, @NotNull Set<SUser> users) {
+        sendNotification(extractInfo(build, "failing", "danger"), users);
+    }
+
+    public void notifyBuildProbablyHanging(@NotNull SRunningBuild build, @NotNull Set<SUser> users) {
+        sendNotification(extractInfo(build, "probably hanging", "warning"), users);
+    }
+
+    public void notifyBuildStarted(@NotNull SRunningBuild build, @NotNull Set<SUser> users) {
+        sendNotification(extractInfo(build, "started", "warning"), users);
+    }
+
     public void notifyLabelingFailed(@NotNull Build build, @NotNull VcsRoot vcsRoot, @NotNull Throwable throwable, @NotNull Set<SUser> users) {
-        sendNotification(build.getFullName(), build.getBuildNumber(), "labeling failed", "danger", users, build);
-    }
-
-    public void notifyBuildFailed(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users) {
-        log(runningBuild, users, "[notifyBuildFailed]");
-        sendNotification(runningBuild.getFullName(), runningBuild.getBuildNumber(), "failed: " + runningBuild.getStatusDescriptor().getText(), "danger", users, runningBuild);
-    }
-
-    public void notifyBuildFailedToStart(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users) {
-        log(runningBuild, users, "[notifyBuildFailedToStart]");
-        sendNotification(runningBuild.getFullName(), runningBuild.getBuildNumber(), "failed to start", "danger", users, runningBuild);
-    }
-
-    public void notifyBuildSuccessful(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users) {
-        log(runningBuild, users, "[notifyBuildSuccessful]");
-        sendNotification(runningBuild.getFullName(), runningBuild.getBuildNumber(), "built successfully", "good", users, runningBuild);
-    }
-
-    public void notifyBuildFailing(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users) {
-        log(runningBuild, users, "[notifyBuildFailing]");
-        sendNotification(runningBuild.getFullName(), runningBuild.getBuildNumber(), "failing", "danger", users, runningBuild);
-    }
-
-    public void notifyBuildProbablyHanging(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users) {
-        log(runningBuild, users, "[notifyBuildProbablyHanging]");
-        sendNotification(runningBuild.getFullName(), runningBuild.getBuildNumber(), "probably hanging", "warning", users, runningBuild);
-    }
-
-    public void notifyBuildStarted(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users) {
-        log(runningBuild, users, "[notifyBuildStarted]");
-        sendNotification(runningBuild.getFullName(), runningBuild.getBuildNumber(), "started", "warning", users, runningBuild);
     }
 
     public void notifyResponsibleChanged(@NotNull SBuildType sBuildType, @NotNull Set<SUser> users) {
@@ -147,7 +140,7 @@ public class SlackNotificator implements Notificator {
     }
 
     private ArrayList<UserPropertyInfo> getUserPropertyInfosList() {
-        ArrayList<UserPropertyInfo> userPropertyInfos = new ArrayList<UserPropertyInfo>();
+        ArrayList<UserPropertyInfo> userPropertyInfos = new ArrayList<>();
 
         userPropertyInfos.add(new UserPropertyInfo(slackChannelKey, "Slack Channel"));
         userPropertyInfos.add(new UserPropertyInfo(slackUsernameKey, "Slack Username"));
@@ -156,13 +149,13 @@ public class SlackNotificator implements Notificator {
         return userPropertyInfos;
     }
 
-    private void sendNotification(String project, String build, String statusText, String statusColor, Set<SUser> users, Build bt) {
+    private void sendNotification(@NotNull BuildInfo info, @NotNull Set<SUser> users) {
         for (SUser user : users) {
             SlackWrapper slackWrapper = getSlackWrapperWithUser(user);
             try {
-                slackWrapper.send(project, build, getBranch((SBuild) bt), statusText, statusColor, bt);
+                slackWrapper.send(info);
             } catch (IOException e) {
-                log.error(e.getMessage());
+                log.error("Failed to send notification", e);
             }
         }
     }
@@ -192,39 +185,45 @@ public class SlackNotificator implements Notificator {
         slackWrapper.setChannel(channel);
         slackWrapper.setUsername(username);
         slackWrapper.setSlackUrl(url);
-        slackWrapper.setServerUrl(myServer.getRootUrl());
 
         return slackWrapper;
     }
 
+    private BuildInfo extractInfo(@NotNull SBuild build, String statusText, String statusColor) {
+        String branch = getBranch(build);
+        List<Changeset> changesetList = new ArrayList<>();
+        List<SVcsModification> containingChanges = build.getContainingChanges();
+        for (SVcsModification modification : containingChanges) {
+            String commit = modification.getVersion();
+            String author = modification.getUserName();
+            String summary = modification.getDescription();
+            changesetList.add(new Changeset(commit, author, summary));
+            log.error("modification.getId(): " + modification.getId());
+            log.error("modification.getVersion(): " + modification.getVersion());
+            log.error("modification.getDisplayVersion(): " + modification.getDisplayVersion());
+        }
+        BuildInfo info = new BuildInfo.Builder()
+                .project(build.getFullName())
+                .build(build.getBuildNumber())
+                .branch(branch)
+                .statusText(statusText)
+                .statusColor(statusColor)
+                .btId(build.getBuildTypeExternalId())
+                .buildId(build.getBuildId())
+                .serverUrl(WebUtil.escapeUrlForQuotes(myServer.getRootUrl()))
+                .changesetList(changesetList)
+                .createBuildInfo();
+        log.error(String.format("Results: %s", info));
+
+        return info;
+    }
+
     private String getBranch(SBuild build) {
         Branch branch = build.getBranch();
-        if (branch != null && !branch.getName().equals("<default>")) {
+        if (branch != null) {
             return branch.getDisplayName();
-        } else {
-            return "";
         }
-    }
 
-    private void log(@NotNull SRunningBuild runningBuild, @NotNull Set<SUser> users, String label) {
-        log.error(anyToString(runningBuild, label + " build"));
-        log.error(anyToString(users, label + " users"));
-    }
-
-    private String anyToString(Object o, String message) {
-        return String.format("%s:\n%s", message, anyToString(o));
-    }
-
-    private String anyToString(Object o) {
-        return new ReflectionToStringBuilder(o, CUSTOM_TO_STRING_STYLE).toString();
-    }
-
-    private static class CustomToStringStyle extends RecursiveToStringStyle {
-        public CustomToStringStyle() {
-            this.setContentStart("[");
-            this.setFieldSeparator(SystemUtils.LINE_SEPARATOR + "  ");
-            this.setFieldSeparatorAtStart(true);
-            this.setContentEnd(SystemUtils.LINE_SEPARATOR + "]");
-        }
+        return "default";
     }
 }

@@ -4,9 +4,7 @@ import com.enlivenhq.teamcity.SlackNotificator;
 import com.enlivenhq.teamcity.SlackPayload;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import jetbrains.buildServer.Build;
 import jetbrains.buildServer.serverSide.TeamCityProperties;
-import jetbrains.buildServer.web.util.WebUtil;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,8 +21,6 @@ public class SlackWrapper {
 
     protected String channel;
 
-    protected String serverUrl;
-
     protected Boolean useAttachment;
 
     public SlackWrapper() {
@@ -35,8 +31,8 @@ public class SlackWrapper {
         this.useAttachment = useAttachment;
     }
 
-    public String send(String project, String build, String branch, String statusText, String statusColor, Build bt) throws IOException {
-        String formattedPayload = getFormattedPayload(project, build, branch, statusText, statusColor, bt.getBuildTypeExternalId(), bt.getBuildId());
+    public String send(BuildInfo info) throws IOException {
+        String formattedPayload = getFormattedPayload(info);
         LOG.debug(formattedPayload);
 
         URL url = new URL(this.getSlackUrl());
@@ -74,10 +70,10 @@ public class SlackWrapper {
     }
 
     @NotNull
-    public String getFormattedPayload(String project, String build, String branch, String statusText, String statusColor, String btId, long buildId) {
+    public String getFormattedPayload(BuildInfo info) {
         Gson gson = GSON_BUILDER.create();
 
-        SlackPayload slackPayload = new SlackPayload(project, build, branch, statusText, statusColor, btId, buildId, WebUtil.escapeUrlForQuotes(getServerUrl()));
+        SlackPayload slackPayload = new SlackPayload(info);
         slackPayload.setChannel(getChannel());
         slackPayload.setUsername(getUsername());
         slackPayload.setUseAttachments(this.useAttachment);
@@ -122,13 +118,5 @@ public class SlackWrapper {
 
     public String getChannel() {
         return this.channel;
-    }
-
-    public String getServerUrl() {
-        return serverUrl;
-    }
-
-    public void setServerUrl(String serverUrl) {
-        this.serverUrl = serverUrl;
     }
 }

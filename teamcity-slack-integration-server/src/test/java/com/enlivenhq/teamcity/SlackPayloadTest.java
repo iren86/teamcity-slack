@@ -1,7 +1,10 @@
 package com.enlivenhq.teamcity;
 
+import com.enlivenhq.slack.BuildInfo;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
+
+import java.util.Collections;
 
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -19,6 +22,17 @@ public class SlackPayloadTest {
     String channel = "#channel";
     String username = "bot";
     SlackPayload slackPayload;
+    BuildInfo buildInfo = new BuildInfo.Builder()
+            .project(project)
+            .build(build)
+            .branch(branch)
+            .statusText(statusText)
+            .statusColor(statusColor)
+            .btId(btId)
+            .buildId(buildId)
+            .serverUrl(serverUrl)
+            .changesetList(Collections.emptyList())
+            .createBuildInfo();
 
     @AfterMethod
     public void tearDown() throws Exception {
@@ -27,26 +41,26 @@ public class SlackPayloadTest {
 
     @Test
     public void testSlackPayloadDoesNotRequiresUserAndChannel() {
-        slackPayload = new SlackPayload(project, build, branch, statusText, statusColor, btId, buildId, serverUrl);
+        slackPayload = new SlackPayload(buildInfo);
         assertFalse(false);
     }
 
     @Test
     public void testSlackPayloadWithoutAttachment() {
-        slackPayload = new SlackPayload(project, build, branch, statusText, statusColor, btId, buildId, serverUrl);
+        slackPayload = new SlackPayload(buildInfo);
         slackPayload.setUseAttachments(false);
         assertFalse(slackPayload.hasAttachments());
     }
 
     @Test
     public void testSlackPayloadUsesAttachmentByDefault() {
-        slackPayload = new SlackPayload(project, build, branch, statusText, statusColor, btId, buildId, serverUrl);
+        slackPayload = new SlackPayload(buildInfo);
         assertTrue(slackPayload.hasAttachments());
     }
 
     @Test
     public void testSlackPayloadIsUpdatedWithUsername() {
-        slackPayload = new SlackPayload(project, build, branch, statusText, statusColor, btId, buildId, serverUrl);
+        slackPayload = new SlackPayload(buildInfo);
         slackPayload.setUseAttachments(false);
         slackPayload.setUsername(username);
         assertTrue(slackPayload.getUsername().equals(username));
@@ -54,7 +68,7 @@ public class SlackPayloadTest {
 
     @org.testng.annotations.Test
     public void testSlackPayloadIsUpdatedWithChannel() {
-        slackPayload = new SlackPayload(project, build, branch, statusText, statusColor, btId, buildId, serverUrl);
+        slackPayload = new SlackPayload(buildInfo);
         slackPayload.setUseAttachments(false);
         slackPayload.setChannel(channel);
         assertTrue(slackPayload.getChannel().equals(channel));
