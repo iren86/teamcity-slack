@@ -6,6 +6,8 @@ import java.util.Objects;
 
 public class BuildInfo {
     private final String username;
+    private final String fullname;
+    private final String email;
     private final String project;
     private final String build;
     private final String branch;
@@ -16,9 +18,11 @@ public class BuildInfo {
     private final String serverUrl;
     private final List<Changeset> changesetList;
 
-    private BuildInfo(String username, String project, String build, String branch, String statusText, String statusColor, String btId,
-                      long buildId, String serverUrl, List<Changeset> changesetList) {
+    private BuildInfo(String username, String fullname, String email, String project, String build, String branch,
+                      String statusText, String statusColor, String btId, long buildId, String serverUrl, List<Changeset> changesetList) {
         this.username = username;
+        this.fullname = fullname;
+        this.email = email;
         this.project = project;
         this.build = build;
         this.branch = branch;
@@ -32,6 +36,14 @@ public class BuildInfo {
 
     public String getUsername() {
         return username;
+    }
+
+    public String getFullname() {
+        return fullname;
+    }
+
+    public String getEmail() {
+        return email;
     }
 
     public String getProject() {
@@ -74,6 +86,8 @@ public class BuildInfo {
     public String toString() {
         final StringBuilder sb = new StringBuilder("BuildInfo{");
         sb.append("username='").append(username).append('\'');
+        sb.append(", fullname='").append(fullname).append('\'');
+        sb.append(", email='").append(email).append('\'');
         sb.append(", project='").append(project).append('\'');
         sb.append(", build='").append(build).append('\'');
         sb.append(", branch='").append(branch).append('\'');
@@ -89,6 +103,8 @@ public class BuildInfo {
 
     public static class Builder {
         private String username;
+        private String fullname;
+        private String email;
         private String project;
         private String build;
         private String branch;
@@ -101,6 +117,16 @@ public class BuildInfo {
 
         public Builder username(String username) {
             this.username = username;
+            return this;
+        }
+
+        public Builder fullname(String fullname) {
+            this.fullname = fullname;
+            return this;
+        }
+
+        public Builder email(String email) {
+            this.email = email;
             return this;
         }
 
@@ -151,6 +177,8 @@ public class BuildInfo {
 
         public BuildInfo createBuildInfo() {
             Objects.requireNonNull(username);
+            Objects.requireNonNull(fullname);
+            Objects.requireNonNull(email);
             Objects.requireNonNull(project);
             Objects.requireNonNull(build);
             Objects.requireNonNull(branch);
@@ -160,7 +188,7 @@ public class BuildInfo {
             Objects.requireNonNull(serverUrl);
             Objects.requireNonNull(changesetList);
 
-            return new BuildInfo(username, project, build, branch, statusText,
+            return new BuildInfo(username, fullname, email, project, build, branch, statusText,
                     statusColor, btId, buildId, serverUrl, changesetList);
         }
     }

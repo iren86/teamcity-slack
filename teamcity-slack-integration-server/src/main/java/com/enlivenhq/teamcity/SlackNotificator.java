@@ -200,6 +200,8 @@ public class SlackNotificator implements Notificator {
         }
         BuildInfo info = new BuildInfo.Builder()
                 .username(getUsername(build))
+                .fullname(getFullname(build))
+                .email(getEmail(build))
                 .project(build.getFullName())
                 .build(build.getBuildNumber())
                 .branch(getBranch(build))
@@ -216,7 +218,7 @@ public class SlackNotificator implements Notificator {
     }
 
     private String getUsername(SBuild build) {
-        String defaultUsername = "";
+        String defaultUsername = "guest";
         TriggeredBy triggeredBy = build.getTriggeredBy();
         if (triggeredBy == null) {
             return defaultUsername;
@@ -231,6 +233,42 @@ public class SlackNotificator implements Notificator {
         }
 
         return username;
+    }
+
+    private String getFullname(SBuild build) {
+        String defaultFullname = "guest";
+        TriggeredBy triggeredBy = build.getTriggeredBy();
+        if (triggeredBy == null) {
+            return defaultFullname;
+        }
+        SUser user = triggeredBy.getUser();
+        if (user == null) {
+            return defaultFullname;
+        }
+        String fullname = user.getDescriptiveName();
+        if (fullname == null) {
+            return defaultFullname;
+        }
+
+        return fullname;
+    }
+
+    private String getEmail(SBuild build) {
+        String defaultEmail = "-";
+        TriggeredBy triggeredBy = build.getTriggeredBy();
+        if (triggeredBy == null) {
+            return defaultEmail;
+        }
+        SUser user = triggeredBy.getUser();
+        if (user == null) {
+            return defaultEmail;
+        }
+        String email = user.getEmail();
+        if (email == null) {
+            return defaultEmail;
+        }
+
+        return email;
     }
 
     private String getBranch(SBuild build) {

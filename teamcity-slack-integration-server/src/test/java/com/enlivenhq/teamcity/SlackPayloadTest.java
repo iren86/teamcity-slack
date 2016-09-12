@@ -24,6 +24,8 @@ public class SlackPayloadTest {
     SlackPayload slackPayload;
     BuildInfo buildInfo = new BuildInfo.Builder()
             .username(username)
+            .fullname(username)
+            .email(username)
             .project(project)
             .build(build)
             .branch(branch)

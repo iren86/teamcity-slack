@@ -120,6 +120,10 @@ public class SlackPayload {
             return new AttachmentField("Changesets", sb.toString(), false);
         }
 
-        return new AttachmentField("Build restarted By: " + info.getUsername(), "", false);
+        return new AttachmentField("Build restarted By: " + getUserInfo(info), "", false);
+    }
+
+    private String getUserInfo(BuildInfo info) {
+        return String.format("%s <%s>", info.getFullname(), info.getEmail());
     }
 }
