@@ -4,8 +4,9 @@
 *.jar
 *.war
 *.ear
+*.zip
 
 # IntelliJ #
 .idea
-target
 *.iml
+target

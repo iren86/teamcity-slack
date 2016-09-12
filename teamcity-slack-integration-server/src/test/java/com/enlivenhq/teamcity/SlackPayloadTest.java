@@ -23,6 +23,7 @@ public class SlackPayloadTest {
     String username = "bot";
     SlackPayload slackPayload;
     BuildInfo buildInfo = new BuildInfo.Builder()
+            .username(username)
             .project(project)
             .build(build)
             .branch(branch)
