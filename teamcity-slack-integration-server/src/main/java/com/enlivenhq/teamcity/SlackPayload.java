@@ -3,6 +3,7 @@ package com.enlivenhq.teamcity;
 import com.enlivenhq.slack.BuildInfo;
 import com.enlivenhq.slack.Changeset;
 import com.google.gson.annotations.Expose;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +78,7 @@ public class SlackPayload {
         return attachments != null && attachments.size() > 0;
     }
 
-    public SlackPayload(BuildInfo info) {
+    public SlackPayload(@NotNull BuildInfo info) {
         Objects.requireNonNull(info);
 
         String statusText = "<" + info.getServerUrl() + "/viewLog.html?buildId=" + info.getBuildId() + "&buildTypeId=" + info.getBtId() + "|" + info.getStatusText() + ">";
@@ -97,16 +98,7 @@ public class SlackPayload {
 
         attachment.fields.add(attachmentStatus);
         attachment.fields.add(attachmentBranch);
-
-        StringBuilder sb = new StringBuilder();
-        for (Changeset changeset : info.getChangesetList()) {
-            sb.append("Commit: ").append(changeset.getCommit()).append("\n");
-            sb.append("Author: ").append(changeset.getAuthor()).append("\n");
-            sb.append("Summary: ").append(changeset.getSummary()).append("\n");
-            sb.append("\n");
-        }
-        AttachmentField attachmentChangesets = new AttachmentField("Changesets", sb.toString(), false);
-        attachment.fields.add(attachmentChangesets);
+        attachment.fields.add(getCommitAttachmentField(info));
 
         this._attachments = new ArrayList<>();
         this._attachments.add(0, attachment);
@@ -114,5 +106,20 @@ public class SlackPayload {
         if (this.useAttachments) {
             this.attachments = this._attachments;
         }
+    }
+
+    private AttachmentField getCommitAttachmentField(BuildInfo info) {
+        if (!info.getChangesetList().isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            for (Changeset changeset : info.getChangesetList()) {
+                sb.append("Commit: ").append(changeset.getCommit()).append("\n");
+                sb.append("Author: ").append(changeset.getAuthor()).append("\n");
+                sb.append("Summary: ").append(changeset.getSummary()).append("\n");
+                sb.append("\n");
+            }
+            return new AttachmentField("Changesets", sb.toString(), false);
+        }
+
+        return new AttachmentField("Build restarted By: " + info.getUsername(), "", false);
     }
 }

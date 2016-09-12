@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class BuildInfo {
+    private final String username;
     private final String project;
     private final String build;
     private final String branch;
@@ -15,8 +16,9 @@ public class BuildInfo {
     private final String serverUrl;
     private final List<Changeset> changesetList;
 
-    private BuildInfo(String project, String build, String branch, String statusText, String statusColor, String btId,
+    private BuildInfo(String username, String project, String build, String branch, String statusText, String statusColor, String btId,
                       long buildId, String serverUrl, List<Changeset> changesetList) {
+        this.username = username;
         this.project = project;
         this.build = build;
         this.branch = branch;
@@ -26,6 +28,10 @@ public class BuildInfo {
         this.buildId = buildId;
         this.serverUrl = serverUrl;
         this.changesetList = Collections.unmodifiableList(changesetList);
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public String getProject() {
@@ -67,7 +73,8 @@ public class BuildInfo {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("BuildInfo{");
-        sb.append("project='").append(project).append('\'');
+        sb.append("username='").append(username).append('\'');
+        sb.append(", project='").append(project).append('\'');
         sb.append(", build='").append(build).append('\'');
         sb.append(", branch='").append(branch).append('\'');
         sb.append(", statusText='").append(statusText).append('\'');
@@ -81,6 +88,7 @@ public class BuildInfo {
     }
 
     public static class Builder {
+        private String username;
         private String project;
         private String build;
         private String branch;
@@ -90,6 +98,11 @@ public class BuildInfo {
         private long buildId;
         private String serverUrl;
         private List<Changeset> changesetList;
+
+        public Builder username(String username) {
+            this.username = username;
+            return this;
+        }
 
         public Builder project(String project) {
             this.project = project;
@@ -137,6 +150,7 @@ public class BuildInfo {
         }
 
         public BuildInfo createBuildInfo() {
+            Objects.requireNonNull(username);
             Objects.requireNonNull(project);
             Objects.requireNonNull(build);
             Objects.requireNonNull(branch);
@@ -146,7 +160,8 @@ public class BuildInfo {
             Objects.requireNonNull(serverUrl);
             Objects.requireNonNull(changesetList);
 
-            return new BuildInfo(project, build, branch, statusText, statusColor, btId, buildId, serverUrl, changesetList);
+            return new BuildInfo(username, project, build, branch, statusText,
+                    statusColor, btId, buildId, serverUrl, changesetList);
         }
     }
 }

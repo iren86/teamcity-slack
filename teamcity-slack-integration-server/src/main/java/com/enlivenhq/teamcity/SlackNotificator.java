@@ -190,7 +190,6 @@ public class SlackNotificator implements Notificator {
     }
 
     private BuildInfo extractInfo(@NotNull SBuild build, String statusText, String statusColor) {
-        String branch = getBranch(build);
         List<Changeset> changesetList = new ArrayList<>();
         List<SVcsModification> containingChanges = build.getContainingChanges();
         for (SVcsModification modification : containingChanges) {
@@ -198,14 +197,12 @@ public class SlackNotificator implements Notificator {
             String author = modification.getUserName();
             String summary = modification.getDescription();
             changesetList.add(new Changeset(commit, author, summary));
-            log.error("modification.getId(): " + modification.getId());
-            log.error("modification.getVersion(): " + modification.getVersion());
-            log.error("modification.getDisplayVersion(): " + modification.getDisplayVersion());
         }
         BuildInfo info = new BuildInfo.Builder()
+                .username(getUsername(build))
                 .project(build.getFullName())
                 .build(build.getBuildNumber())
-                .branch(branch)
+                .branch(getBranch(build))
                 .statusText(statusText)
                 .statusColor(statusColor)
                 .btId(build.getBuildTypeExternalId())
@@ -216,6 +213,24 @@ public class SlackNotificator implements Notificator {
         log.error(String.format("Results: %s", info));
 
         return info;
+    }
+
+    private String getUsername(SBuild build) {
+        String defaultUsername = "";
+        TriggeredBy triggeredBy = build.getTriggeredBy();
+        if (triggeredBy == null) {
+            return defaultUsername;
+        }
+        SUser user = triggeredBy.getUser();
+        if (user == null) {
+            return defaultUsername;
+        }
+        String username = user.getUsername();
+        if (username == null) {
+            return defaultUsername;
+        }
+
+        return username;
     }
 
     private String getBranch(SBuild build) {
